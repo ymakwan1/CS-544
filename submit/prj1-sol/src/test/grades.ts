@@ -184,9 +184,12 @@ describe('grades', () => {
 
     it('must successfully add a new empty column', () => {
       const addResult = grades.addColumn('prj4');
+      console.log(addResult);
       assert(addResult.isOk === true);
       const rows = addResult.val.getRawTable();
+      console.log(rows);
       const n0 = Object.keys(ROW_544).length;
+      console.log(n0);
       expect(rows.every(r => Object.keys(r).length === n0 + 1)).to.be.true;
     });
 
@@ -195,12 +198,16 @@ describe('grades', () => {
       const addResult = grades.addColumn('prj4');
       assert(addResult.isOk === true);
       const rows = addResult.val.getRawTable();
+      console.log(rows);
       expect(rows).to.have.length(2);
       for (const row of rows) {
 	const colIds = Object.keys(row);
+  console.log(colIds);
 	const colIndexes = colIds.map(colId => cs544.cols[colId].colIndex);
+  console.log(colIndexes);
 	const isOrdered =	colIndexes.every((index, i, indexes) =>
 	  i === 0 || indexes[i - 1] < index);
+  console.log(isOrdered);
 	expect(isOrdered).to.be.true;
       }
     });

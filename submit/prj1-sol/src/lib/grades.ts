@@ -35,7 +35,86 @@ class GradesImpl implements C.CourseObj, G.Grades {
    *    for course.
    */
   addColumn(colId: string) : Result<G.Grades> {
-    return errResult('TODO', 'UNIMPLEMENTED') as Result<G.Grades>;
+    const cols = this.course.cols;
+
+    const colProp = cols[colId];
+    if (!colProp || colProp.kind === 'calc' || this.#colIds.has(colId)) {
+      return errResult(`'${colId}' is not a valid column to add`, 'BAD_ARG');
+    }
+
+    // const newRawRowsMap : RawRowsMap = {};
+    // for (const [rowId, rawRow] of Object.entries(this.#rawRowsMap)) {
+    //   newRawRowsMap[rowId] = {
+    //     ...rawRow,
+    //     [colId]: ' ',
+    //   };
+    // }
+
+  // const newRawRowsMap: RawRowsMap = {};
+  // for (const [rowId, rawRow] of Object.entries(this.#rawRowsMap)) {
+  //   newRawRowsMap[rowId] = {
+  //     ...rawRow,
+  //     [colId]: '',
+  //   };
+  // }
+  let newRawRowsMap: RawRowsMap={};
+  for (const [rowId, rawRow] of Object.entries(this.#rawRowsMap)) {
+    if (rawRow.kind === 'score') {
+      newRawRowsMap[rowId] = {
+        ...rawRow,
+        ...{ [colId]: ''},
+      };
+    }else {
+    // newRawRowsMap[rowId] = rawRow;
+    newRawRowsMap[rowId] = {
+           ...rawRow,
+           ...{[colId]: ''},
+         };
+    }
+  }
+
+  console.log(newRawRowsMap);
+
+  // const row1Pairs =Object.entries(Object.keys(newRawRowsMap).map(keys => [keys, (Object.keys(newRawRowsMap[keys])
+  // .sort((colId1, colId2) => cols[colId1].colIndex - cols[colId2].colIndex)
+  // .map(colId => [colId, newRawRowsMap[keys][colId]]))]));
+
+  newRawRowsMap = Object.fromEntries(Object.keys(newRawRowsMap)
+    .map(key => [key, Object.fromEntries(Object.keys(newRawRowsMap[key])
+    .sort((colId1, colId2) => cols[colId1].colIndex - cols[colId2].colIndex)
+    .map(colId => [colId, newRawRowsMap[key][colId]] ))
+  ]));
+
+  console.log(newRawRowsMap);
+
+
+	//.sort((colId1, colId2) => cols[colId1].colIndex - cols[colId2].colIndex)
+	
+      //const row1 = Object.fromEntries(row1Pairs);
+      //const newrawRowsMap = { ...this.#rawRowsMap, ...{ [colId]: '' } };
+
+    return okResult(new GradesImpl(this.course, new Set([...this.#colIds, colId]), newRawRowsMap));
+    //return errResult('TODO', 'UNIMPLEMENTED') as Result<G.Grades>;
+
+    // const rawRowsMap: {[key: string]: G.RawRow} = {};
+    // for (const [rowId, row] of Object.entries(this.#rawRowsMap)) {
+    //   const newRow: G.RawRow = {};
+    //   let added = false;
+    //   for (const [col, val] of Object.entries(row)) {
+    //     if (col === colId) {
+    //       newRow[colId] = undefined;
+    //       added = true;
+    //     }
+    //     newRow[col] = val;
+    //   }
+    //   if (!added) {
+    //     newRow[colId] = '';
+    //   }
+    //   rawRowsMap[rowId] = newRow;
+    // }
+
+    // const colIds = new Set<string>([...this.#colIds, colId]);
+    // return okResult(new GradesImpl(this.course, colIds, rawRowsMap));
   }
 
   /** Apply patches to table, returning the patched table.
@@ -45,7 +124,81 @@ class GradesImpl implements C.CourseObj, G.Grades {
    *    RANGE: Patch data is out-of-range.
    */
   patch(patches: G.Patches): Result<G.Grades> {
-    return errResult('TODO', 'UNIMPLEMENTED') as Result<G.Grades>;
+  //   const rowIds = Object.keys(this.#rawRowsMap);
+  // const colIds = [...this.#colIds];
+  // for (const [rowId, patchRow] of Object.entries(patches)) {
+  //   if (!rowIds.includes(rowId)) {
+  //     return errResult(`'${rowId}' is not a valid row id`, 'BAD_ARG');
+  //   }
+  //   const patchColIds = Object.keys(patchRow);
+  //   for (const colId of patchColIds) {
+  //     if (!colIds.includes(colId)) {
+  //       return errResult(`'${colId}' is not a valid column id`, 'BAD_ARG');
+  //     }
+  //   }
+  // }
+
+  // // Apply the patches
+  // const newRawRowsMap: RawRowsMap = {};
+  // for (const [rowId, rawRow] of Object.entries(this.#rawRowsMap)) {
+  //   newRawRowsMap[rowId] = { ...rawRow, ...patches[rowId] };
+  // }
+
+  // // Create and return a new Grades object with the updated table
+  // return okResult(new GradesImpl(this.course, this.#colIds, newRawRowsMap));
+    //return errResult('TODO', 'UNIMPLEMENTED') as Result<G.Grades>;
+
+    let err = new ErrResult();
+    const colIds = this.#colIds;
+    const rowIds = Object.keys(patches);
+    
+    // check for valid row ids
+    rowIds.forEach(rowId => {
+      if (!(rowId in this.#rawRowsMap)) {
+        err = err.addError(`unknown row id ${rowId}`, 'BAD_ARG');
+      }
+    });
+    
+    // check for valid column ids and range constraints
+    rowIds.forEach(rowId => {
+      const patchRow = patches[rowId];
+      const existingRow = this.#rawRowsMap[rowId];
+      const patchColIds = Object.keys(patchRow);
+      patchColIds.forEach(colId => {
+        if (!colIds.has(colId)) {
+          err = err.addError(`unknown column id ${colId}`, 'BAD_ARG');
+        } else if (colId !== this.course.rowIdColId && colId !== this.course.id) {
+          const colProp = this.course.cols[colId];
+          const patchValue = patchRow[colId];
+          const existingValue = existingRow[colId];
+          if (colProp.kind === 'score') {
+            const { min, max } = colProp;
+            if (typeof patchValue !== 'number' || patchValue < min || patchValue > max) {
+              err = err.addError(`invalid patch value for ${colId} on row ${rowId}`, 'RANGE');
+            }
+          }
+          if (colProp.kind === 'calc') {
+            err = err.addError(`attempt to patch calculated column ${colId} on row ${rowId}`, 'BAD_ARG');
+          }
+        }
+      });
+    });
+    
+    if (err.errors.length > 0) {
+      return err;
+    }
+    
+    // apply the patches
+    let rawRowsMap = { ...this.#rawRowsMap };
+    rowIds.forEach(rowId => {
+      rawRowsMap = {
+        ...rawRowsMap,
+        [rowId]: { ...rawRowsMap[rowId], ...patches[rowId] }
+      };
+    });
+    
+    return okResult(new GradesImpl(this.course, colIds, rawRowsMap));
+  
   }
 
   /** Return full table containing all computed values */
