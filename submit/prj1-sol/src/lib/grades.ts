@@ -42,42 +42,28 @@ class GradesImpl implements C.CourseObj, G.Grades {
       return errResult(`'${colId}' is not a valid column to add`, 'BAD_ARG');
     }
 
-    // const newRawRowsMap : RawRowsMap = {};
-    // for (const [rowId, rawRow] of Object.entries(this.#rawRowsMap)) {
-    //   newRawRowsMap[rowId] = {
-    //     ...rawRow,
-    //     [colId]: ' ',
-    //   };
-    // }
-
-  // const newRawRowsMap: RawRowsMap = {};
-  // for (const [rowId, rawRow] of Object.entries(this.#rawRowsMap)) {
-  //   newRawRowsMap[rowId] = {
-  //     ...rawRow,
-  //     [colId]: '',
-  //   };
-  // }
-  let newRawRowsMap: RawRowsMap={};
+  let newRawRowsMap: RawRowsMap = {};
   for (const [rowId, rawRow] of Object.entries(this.#rawRowsMap)) {
-    if (rawRow.kind === 'score') {
-      newRawRowsMap[rowId] = {
-        ...rawRow,
-        ...{ [colId]: ''},
-      };
-    }else {
-    // newRawRowsMap[rowId] = rawRow;
     newRawRowsMap[rowId] = {
-           ...rawRow,
-           ...{[colId]: ''},
-         };
-    }
+      ...rawRow,
+     ...{ [colId]: ''},
+    };
   }
-
-  console.log(newRawRowsMap);
-
-  // const row1Pairs =Object.entries(Object.keys(newRawRowsMap).map(keys => [keys, (Object.keys(newRawRowsMap[keys])
-  // .sort((colId1, colId2) => cols[colId1].colIndex - cols[colId2].colIndex)
-  // .map(colId => [colId, newRawRowsMap[keys][colId]]))]));
+  // let newRawRowsMap: RawRowsMap={};
+  // for (const [rowId, rawRow] of Object.entries(this.#rawRowsMap)) {
+  //   if (rawRow.kind === 'score') {
+  //     newRawRowsMap[rowId] = {
+  //       ...rawRow,
+  //       ...{ [colId]: ''},
+  //     };
+  //   }else {
+  //   // newRawRowsMap[rowId] = rawRow;
+  //   newRawRowsMap[rowId] = {
+  //          ...rawRow,
+  //          ...{[colId]: ''},
+  //        };
+  //   }
+  // }
 
   newRawRowsMap = Object.fromEntries(Object.keys(newRawRowsMap)
     .map(key => [key, Object.fromEntries(Object.keys(newRawRowsMap[key])
@@ -85,36 +71,7 @@ class GradesImpl implements C.CourseObj, G.Grades {
     .map(colId => [colId, newRawRowsMap[key][colId]] ))
   ]));
 
-  console.log(newRawRowsMap);
-
-
-	//.sort((colId1, colId2) => cols[colId1].colIndex - cols[colId2].colIndex)
-	
-      //const row1 = Object.fromEntries(row1Pairs);
-      //const newrawRowsMap = { ...this.#rawRowsMap, ...{ [colId]: '' } };
-
     return okResult(new GradesImpl(this.course, new Set([...this.#colIds, colId]), newRawRowsMap));
-    //return errResult('TODO', 'UNIMPLEMENTED') as Result<G.Grades>;
-
-    // const rawRowsMap: {[key: string]: G.RawRow} = {};
-    // for (const [rowId, row] of Object.entries(this.#rawRowsMap)) {
-    //   const newRow: G.RawRow = {};
-    //   let added = false;
-    //   for (const [col, val] of Object.entries(row)) {
-    //     if (col === colId) {
-    //       newRow[colId] = undefined;
-    //       added = true;
-    //     }
-    //     newRow[col] = val;
-    //   }
-    //   if (!added) {
-    //     newRow[colId] = '';
-    //   }
-    //   rawRowsMap[rowId] = newRow;
-    // }
-
-    // const colIds = new Set<string>([...this.#colIds, colId]);
-    // return okResult(new GradesImpl(this.course, colIds, rawRowsMap));
   }
 
   /** Apply patches to table, returning the patched table.
