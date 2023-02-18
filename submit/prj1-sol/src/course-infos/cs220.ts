@@ -5,19 +5,9 @@ import * as C from '../lib/course-info.js';
 import * as F from '../lib/formula-fns.js';
 import * as G from '../lib/grade-table.js';
 
-const WEIGHTS = {
-  qzAvg: 1,
-  prjAvg: 0.35,
-  hwAvg: { cs544: 0.22, cs444: 0.25 },
-  paper: { cs544: 1, cs444: 0 },
-  midterm: 0.14,
-  final: 0.15,
-  extra: 1,
-};
-    
-const cs544: C.CourseData = {
-  id: 'cs544',
-  name: 'Programming for the Web',
+const cs220: C.CourseData = {
+  id: 'cs220',
+  name: 'Computer Architecture from a Programming Perspective',
   cols: [
     { kind: 'id', colId: 'emailId', name: 'Email ID', },
     { kind: 'info', colId: 'firstName', name: 'First Name', },
@@ -65,4 +55,4 @@ function totalFn(_course: C.CourseInfo, row: G.GradeRow) : Result<G.RawData> {
   return okResult(total);
 }
 
-export default C.courseDataToCourseInfo(cs544);
+export default C.courseDataToCourseInfo(cs220);
