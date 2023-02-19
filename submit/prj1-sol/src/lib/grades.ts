@@ -110,11 +110,14 @@ class GradesImpl implements C.CourseObj, G.Grades {
     const rowIds = Object.keys(patches);
     
     //check for valid row ids
-    rowIds.forEach(rowId => {
-      if( ! this.#rawRowsMap.hasOwnProperty(rowId)){
-				err = err.addError("BAD rowId", "BAD_ARG");
-			}
-    });
+    // rowIds.forEach(rowId => {
+    //   if( ! this.#rawRowsMap.hasOwnProperty(rowId)){
+		// 		err = err.addError("BAD rowId", "BAD_ARG");
+		// 	}
+    // });
+
+
+
     //for(const[rowId, patchRow] of Object.entries(patches)) {
     //   if (!rowIds.includes(rowId)) {
     //         return errResult(`'${rowId}' is not a valid row id`, 'BAD_ARG');
@@ -124,6 +127,9 @@ class GradesImpl implements C.CourseObj, G.Grades {
     
     // check for valid column ids and range constraints
     rowIds.forEach(rowId => {
+      if( ! this.#rawRowsMap.hasOwnProperty(rowId)){
+				err = err.addError("BAD rowId", "BAD_ARG");
+			}else{
       const patchRow = patches[rowId];
       const existingRow = this.#rawRowsMap[rowId];
       const patchColIds = Object.keys(patchRow);
@@ -145,6 +151,7 @@ class GradesImpl implements C.CourseObj, G.Grades {
           }
         }
       });
+    }
     });
     
     if (err.errors.length > 0) {
