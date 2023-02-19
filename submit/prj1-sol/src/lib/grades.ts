@@ -109,12 +109,18 @@ class GradesImpl implements C.CourseObj, G.Grades {
     const colIds = this.#colIds;
     const rowIds = Object.keys(patches);
     
-    // check for valid row ids
+    //check for valid row ids
     rowIds.forEach(rowId => {
-      if (!(rowId in this.#rawRowsMap)) {
-        err = err.addError(`unknown row id ${rowId}`, 'BAD_ARG');
-      }
+      if( ! this.#rawRowsMap.hasOwnProperty(rowId)){
+				err = err.addError("BAD rowId", "BAD_ARG");
+			}
     });
+    //for(const[rowId, patchRow] of Object.entries(patches)) {
+    //   if (!rowIds.includes(rowId)) {
+    //         return errResult(`'${rowId}' is not a valid row id`, 'BAD_ARG');
+    //     }
+    
+    //}
     
     // check for valid column ids and range constraints
     rowIds.forEach(rowId => {
