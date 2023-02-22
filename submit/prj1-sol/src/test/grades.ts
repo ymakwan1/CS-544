@@ -316,7 +316,7 @@ describe('grades', () => {
       beforeEach(() => {
 	const rawCsvStr = DATA_220.RAW;
 	raw = U.csvToObj(rawCsvStr) as G.RawRow[];
-	grades = loadData(raw, cs220);
+	grades = loadData(raw);//, cs220);
 	const fullCsvStr = DATA_220.FULL;
 	full = U.csvToObj(fullCsvStr) as G.RawRow[];
       });
