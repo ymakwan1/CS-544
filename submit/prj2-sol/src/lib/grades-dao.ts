@@ -4,6 +4,7 @@ import { CourseInfo as C, GradeTable as G, GradesImpl, COURSES }
 import * as mongo from 'mongodb';
 
 import { okResult, errResult, Result } from 'cs544-js-utils';
+import { makeGrades, makeGradesWithData } from 'cs544-prj1-sol/dist/lib/grades';
 
 
 
@@ -20,6 +21,9 @@ export class GradesDao {
 
   private constructor(params: { [key: string]: any }) {
     //TODO
+    debugger
+    this.#client = params.client;
+    this.#grades = params.grades;
   }
 
   /** Factory method for constructing a GradesDao.
@@ -28,6 +32,14 @@ export class GradesDao {
     const params: { [key: string]: any } = {};
     try {
       //TODO
+      params.client = await(new mongo.MongoClient(dbUrl)).connect();
+      const db = params.client.db();
+
+      const grades = db.collection(GRADES_COLLECTION);
+      params.grades = grades;
+
+      await grades.createIndex('courseId');
+
       return okResult(new GradesDao(params));
     }
     catch (error) {
@@ -38,7 +50,12 @@ export class GradesDao {
   /** Close this DAO. */
   async close() : Promise<Result<void>> {
     //TODO
-    return null;
+    //return null;
+    try {
+      await this.#client.close();
+    } catch (e) {
+      return errResult(e.message, 'DB');
+    }
   }
 
   /** Set grades for courseId to rawRows. 
@@ -48,23 +65,87 @@ export class GradesDao {
   async load(courseId: string, rawTable: G.RawTable)
     : Promise<Result<G.Grades>>
   {
-    //TODO
+    const courseCheck = checkCourseId(courseId);
+    if (!courseCheck.isOk) {
+      return errResult(`unknown course id ${courseId}`, 'BAD_ARG');
+    }
+    const result = await this.#write(courseId, rawTable);
+
+    //return okResult(result);
     return null;
   }
   
+  async #write(courseId:string, rawTable : G.RawTable): Promise<Result<G.Grades>>{
+
+    try {
+      const collection = this.#grades;
+      
+      const filter = {courseId};
+      const update = {$set : {[courseId]: courseId, rawTable}};
+      const options = {returnDocument: mongo.ReturnDocument.AFTER, upsert : true};
+
+      const updateResult =  await collection.findOneAndUpdate(filter, update, options);
+
+      if(!updateResult){
+        return errResult(`Wrong update`, 'DB');
+      } else if (!updateResult.value) {
+        return errResult(`No grades found for courseId : ${courseId}`, 'NOT_FOUND');
+      } else{
+        const grades = {...updateResult.value};
+        delete grades._id;
+        //return okResult(grades);
+        //return makeGradesWithData(courseId, grades as G.RawRow[]);
+        return null;
+      }
+    } catch(e){
+      return errResult(e.message, 'DB');
+    }
+  }
+
+  async #read(courseId : string){
+    const courseCheck = checkCourseId(courseId);
+    if (!courseCheck.isOk) {
+      return errResult(`unknown course id ${courseId}`, 'BAD_ARG');
+    }
+    try {
+      const collection = this.#grades;
+      const gradeEntry = await collection.findOne({courseId});
+      if (gradeEntry) {
+        const grades = {...gradeEntry};
+        delete grades._id;
+        return okResult(makeGrades(courseId));
+      } else{
+        return errResult(`No grades found for courseId : ${courseId}`, 'NOT_FOUND');
+      }
+    } catch (e) {
+      return errResult(e.message, 'DB');
+    }
+  }
   /** Return a Grades object for courseId. 
    *  Errors:
    *   BAD_ARG: courseId is not a valid course-id.
    */
   async getGrades(courseId: string): Promise<Result<G.Grades>> {
-    //TODO
+    const courseCheck = checkCourseId(courseId);
+    if (!courseCheck.isOk) {
+      return errResult(`unknown course id ${courseId}`, 'BAD_ARG');
+    }
+
+    //return this.#read(courseId);
     return null;
   }
 
   /** Remove all course grades stored by this DAO */
   async clear() : Promise<Result<void>> {
     //TODO
-    return null;
+    //return null;
+    try {
+      await this.#grades.deleteMany({});
+      return okResult(undefined);
+    }
+    catch (e) {
+      return errResult(e.message, 'DB');
+    }
   }
 
   /** Upsert (i.e. insert or replace) row to table and return the new
@@ -137,3 +218,4 @@ function checkCourseId(courseId: string) : Result<void> {
 
 //TODO: add more local functions, constants, etc.
 
+const GRADES_COLLECTION = 'grades';
