@@ -4,7 +4,6 @@ import { CourseInfo as C, GradeTable as G, GradesImpl, COURSES }
 import * as mongo from 'mongodb';
 
 import { okResult, errResult, Result } from 'cs544-js-utils';
-import { makeGrades, makeGradesWithData } from 'cs544-prj1-sol/dist/lib/grades';
 
 
 
@@ -21,7 +20,7 @@ export class GradesDao {
 
   private constructor(params: { [key: string]: any }) {
     //TODO
-    debugger
+    //debugger
     this.#client = params.client;
     this.#grades = params.grades;
   }
@@ -71,8 +70,8 @@ export class GradesDao {
     }
     const result = await this.#write(courseId, rawTable);
 
-    //return okResult(result);
-    return null;
+    return result;
+    //return null;
   }
   
   async #write(courseId:string, rawTable : G.RawTable): Promise<Result<G.Grades>>{
@@ -82,20 +81,18 @@ export class GradesDao {
       
       const filter = {courseId};
       const update = {$set : {[courseId]: courseId, rawTable}};
+      //const update = {$set : {rawTable}};
       const options = {returnDocument: mongo.ReturnDocument.AFTER, upsert : true};
 
       const updateResult =  await collection.findOneAndUpdate(filter, update, options);
-
+      //this.close()
       if(!updateResult){
         return errResult(`Wrong update`, 'DB');
       } else if (!updateResult.value) {
         return errResult(`No grades found for courseId : ${courseId}`, 'NOT_FOUND');
       } else{
-        const grades = {...updateResult.value};
-        delete grades._id;
-        //return okResult(grades);
-        //return makeGradesWithData(courseId, grades as G.RawRow[]);
-        return null;
+        const grades = {...updateResult.value.rawTable};
+        return GradesImpl.makeGradesWithData(courseId, Object.values(grades));
       }
     } catch(e){
       return errResult(e.message, 'DB');
@@ -111,9 +108,15 @@ export class GradesDao {
       const collection = this.#grades;
       const gradeEntry = await collection.findOne({courseId});
       if (gradeEntry) {
+        //console.log(gradeEntry.toJSON())
         const grades = {...gradeEntry};
         delete grades._id;
-        return okResult(makeGrades(courseId));
+        //console.log(grades);
+        //console.log(GradesImpl.makeGrades(courseId));
+        // if (GradesImpl.makeGrades(courseId).isOk) {
+        //   return grades.grades;
+        // }
+        return GradesImpl.makeGrades(courseId);
       } else{
         return errResult(`No grades found for courseId : ${courseId}`, 'NOT_FOUND');
       }
@@ -130,9 +133,9 @@ export class GradesDao {
     if (!courseCheck.isOk) {
       return errResult(`unknown course id ${courseId}`, 'BAD_ARG');
     }
-
-    //return this.#read(courseId);
-    return null;
+    const ab = this.#read(courseId);
+    return ab;
+   // return null;
   }
 
   /** Remove all course grades stored by this DAO */
@@ -169,6 +172,10 @@ export class GradesDao {
     : Promise<Result<G.Grades>> 
   {
     //TODO
+    const courseCheck = checkCourseId(courseId);
+    if(!courseCheck.isOk){
+      return errResult(`unknown course id ${courseId}`, 'BAD_ARG');
+    }
     return null;
   }
 
