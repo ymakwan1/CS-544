@@ -108,25 +108,17 @@ export class GradesDao {
       const collection = this.#grades;
       const gradeEntry = await collection.findOne({courseId});
       if (gradeEntry) {
-        //console.log(gradeEntry.toJSON())
         const grades = {...gradeEntry};
         delete grades._id;
-        //console.log(grades);
-        //console.log(GradesImpl.makeGradesWithData(courseId, grades.rawTable));
-        // if (GradesImpl.makeGrades(courseId).isOk) {
-        //   return grades.grades;
-        // }
-        //return GradesImpl.makeGrades(courseId);
         return GradesImpl.makeGradesWithData(courseId, grades.rawTable);
       } else{
-        //return errResult(`No grades found for courseId : ${courseId}`, 'NOT_FOUND');
-        //return GradesImpl.makeGradesWithData(courseId, gradeEntry.rawTable);
         return GradesImpl.makeGrades(courseId);
       }
     } catch (e) {
       return errResult(e.message, 'DB');
     }
   }
+
   /** Return a Grades object for courseId. 
    *  Errors:
    *   BAD_ARG: courseId is not a valid course-id.
@@ -138,7 +130,6 @@ export class GradesDao {
     }
     const ab = this.#read(courseId);
     return ab;
-   // return null;
   }
 
   /** Remove all course grades stored by this DAO */
@@ -182,15 +173,13 @@ export class GradesDao {
 
     const readResults = await this.getGrades(courseId);
     if (readResults.isOk) {
-      //console.log(readResults.val.getRawTable());
       let readData = [...readResults.val.getRawTable(), ...rows];
-      //console.log(readData);
-      //console.log(rows);
-      //readData.push(rows);
       const ab = readResults.val.upsertRows(readData);
       if (ab.isOk) {
-        //console.log(ab.val.getRawTable());
         await this.#write(courseId, ab.val.getRawTable());
+      } else {
+        //return errResult(`unknown course id ${courseId}`, 'RANGE');
+        return ab;
       }
     }
     return okResult(undefined);
@@ -213,8 +202,23 @@ export class GradesDao {
   async addColumns(courseId: string, ...colIds: string[])
     : Promise<Result<G.Grades>>
   {
-    //TODO
-    return null;
+    const courseCheck = checkCourseId(courseId);
+    if(!courseCheck.isOk){
+      return errResult(`unknown course id ${courseId}`, 'BAD_ARG');
+    }
+
+    const readData = await this.getGrades(courseId);
+
+    if(readData.isOk){
+      const ab = readData.val.addColumns(...colIds);
+      //console.log(ab)
+
+      if (ab.isOk) {
+        await this.#write(courseId, ab.val.getRawTable())
+      }
+    }
+    
+    return okResult(undefined);
   }
   
   /** Apply patches to table, returning the patched table.
@@ -226,7 +230,24 @@ export class GradesDao {
     : Promise<Result<G.Grades>> 
   { 
     //TODO
-    return null;
+    //return null;
+    const courseCheck = checkCourseId(courseId);
+    if(!courseCheck.isOk){
+      return errResult(`unknown course id ${courseId}`, 'BAD_ARG');
+    }
+
+    const readData = await this.getGrades(courseId);
+
+    if(readData.isOk){
+      const ab = readData.val.patch(patches);
+      //console.log(ab)
+
+      if (ab.isOk) {
+        await this.#write(courseId, ab.val.getRawTable())
+      }
+    }
+    
+    return okResult(undefined);
   }
 
   //TODO: add private methods  

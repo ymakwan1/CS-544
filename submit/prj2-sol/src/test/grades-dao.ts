@@ -204,15 +204,41 @@ describe('grades dao', () => {
 
     
     it('using a bad course-id for getGrades() errors BAD_ARG', async () => {
-      //TODO
+      const courseId = 'cs999'; // unknown courseId
+      const result = await dao.getGrades(courseId);
+      assert(result.isOk === false);
+      expect(result.errors).to.have.length(1);
+      expect(result.errors[0].options.code).to.equal('BAD_ARG');
     });
     
     it('adding a totally unknown column must result in an error', async () => {
       //TODO
+      const courseId = 'cs220';
+  const data = DATA[courseId].raw;
+  expect(data).to.have.length.above(0);
+  const newRow = { ...data[0], xxx: 77 }; // unknown column 'xxx'
+  const loadResult = await dao.load(courseId, data);
+  assert(loadResult.isOk);
+  const upsertResult = await dao.upsertRow(courseId, newRow);
+  assert(upsertResult.isOk === false);
+  expect(upsertResult.errors).to.have.length.above(0);
+  expect(upsertResult.errors[0].options.code).to.equal('BAD_ARG');
     });
 
     it('patching in an out-of-range grade must error', async () => {
       //TODO
+      const courseId = 'cs220';
+  const data = DATA[courseId].raw;
+  expect(data).to.have.length.above(0);
+  const row = data[0];
+  const grade = row.prj1;
+  const newRow = { ...row, prj1: 1000 }; // out-of-range grade
+  const loadResult = await dao.load(courseId, data);
+  assert(loadResult.isOk);
+  const upsertResult = await dao.upsertRow(courseId, newRow);
+  assert(upsertResult.isOk === false);
+  expect(upsertResult.errors).to.have.length.above(0);
+  expect(upsertResult.errors[0].options.code).to.equal('RANGE');
     });
     
   });
