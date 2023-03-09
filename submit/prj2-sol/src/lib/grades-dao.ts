@@ -112,13 +112,16 @@ export class GradesDao {
         const grades = {...gradeEntry};
         delete grades._id;
         //console.log(grades);
-        //console.log(GradesImpl.makeGrades(courseId));
+        //console.log(GradesImpl.makeGradesWithData(courseId, grades.rawTable));
         // if (GradesImpl.makeGrades(courseId).isOk) {
         //   return grades.grades;
         // }
-        return GradesImpl.makeGrades(courseId);
+        //return GradesImpl.makeGrades(courseId);
+        return GradesImpl.makeGradesWithData(courseId, grades.rawTable);
       } else{
-        return errResult(`No grades found for courseId : ${courseId}`, 'NOT_FOUND');
+        //return errResult(`No grades found for courseId : ${courseId}`, 'NOT_FOUND');
+        //return GradesImpl.makeGradesWithData(courseId, gradeEntry.rawTable);
+        return GradesImpl.makeGrades(courseId);
       }
     } catch (e) {
       return errResult(e.message, 'DB');
@@ -176,7 +179,21 @@ export class GradesDao {
     if(!courseCheck.isOk){
       return errResult(`unknown course id ${courseId}`, 'BAD_ARG');
     }
-    return null;
+
+    const readResults = await this.getGrades(courseId);
+    if (readResults.isOk) {
+      //console.log(readResults.val.getRawTable());
+      let readData = [...readResults.val.getRawTable(), ...rows];
+      //console.log(readData);
+      //console.log(rows);
+      //readData.push(rows);
+      const ab = readResults.val.upsertRows(readData);
+      if (ab.isOk) {
+        //console.log(ab.val.getRawTable());
+        await this.#write(courseId, ab.val.getRawTable());
+      }
+    }
+    return okResult(undefined);
   }
 
   /** Add an empty column for colId to table.

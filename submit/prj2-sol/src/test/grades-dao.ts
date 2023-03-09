@@ -74,7 +74,7 @@ describe('grades dao', () => {
     }
   });
 
-  it.only('persisted data must get cleared', async () => {
+  it('persisted data must get cleared', async () => {
     for (const courseId of Object.keys(DATA)) {
       const rowIdColId = COURSES[courseId].rowIdColId;
       const data = DATA[courseId].raw;
