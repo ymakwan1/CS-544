@@ -204,11 +204,12 @@ export class GradesDao {
       const upsertRowsResults = upsertRowsReadResults.val.upsertRows(readData);
       if (upsertRowsResults.isOk) {
         await this.#write(courseId, upsertRowsResults.val.getRawTable());
+        return okResult(upsertRowsResults.val);
       } else {
         return upsertRowsResults;
       }
     }
-    return okResult(undefined);
+    //return okResult(undefined);
   }
 
   /** Add an empty column for colId to table.
@@ -245,10 +246,11 @@ export class GradesDao {
 
       if (addColumnsResults.isOk) {
         await this.#write(courseId, addColumnsResults.val.getRawTable())
+        return okResult(addColumnsResults.val);
       }
     }
     
-    return okResult(undefined);
+    //return okResult(undefined);
   }
   
   /** Apply patches to table, returning the patched table.
@@ -273,11 +275,12 @@ export class GradesDao {
     if(patchReadDataResults.isOk){
       const patchResults = patchReadDataResults.val.patch(patches);
       if (patchResults.isOk) {
-        await this.#write(courseId, patchResults.val.getRawTable())
+        await this.#write(courseId, patchResults.val.getRawTable());
+        return okResult(patchResults.val);
       }
     }
     
-    return okResult(undefined);
+    //return okResult(undefined);
   }
 
   //TODO: add private methods  
