@@ -212,38 +212,36 @@ describe('grades dao', () => {
     });
     
     it('adding a totally unknown column must result in an error', async () => {
-      //TODO
       const courseId = 'cs220';
-  const data = DATA[courseId].raw;
-  expect(data).to.have.length.above(0);
-  const newRow = { ...data[0], xxx: 77 }; // unknown column 'xxx'
-  const loadResult = await dao.load(courseId, data);
-  assert(loadResult.isOk);
-  const upsertResult = await dao.upsertRow(courseId, newRow);
-  assert(upsertResult.isOk === false);
-  expect(upsertResult.errors).to.have.length.above(0);
-  expect(upsertResult.errors[0].options.code).to.equal('BAD_ARG');
+      const data = DATA[courseId].raw;
+      expect(data).to.have.length.above(0);
+      const newRow = { ...data[0], xxx: 77 }; // unknown column 'xxx'
+      const loadResult = await dao.load(courseId, data);
+      assert(loadResult.isOk);
+      const addColumnResult = await dao.addColumn(courseId, 'xxx');
+      assert(addColumnResult.isOk === false);
+      expect(addColumnResult.errors).to.have.length.above(0);
+      expect(addColumnResult.errors[0].options.code).to.equal('BAD_ARG');
     });
 
     it('patching in an out-of-range grade must error', async () => {
-      //TODO
       const courseId = 'cs220';
-  const data = DATA[courseId].raw;
-  expect(data).to.have.length.above(0);
-  const row = data[0];
-  const grade = row.prj1;
-  const newRow = { ...row, prj1: 1000 }; // out-of-range grade
-  const loadResult = await dao.load(courseId, data);
-  assert(loadResult.isOk);
-  const upsertResult = await dao.upsertRow(courseId, newRow);
-  assert(upsertResult.isOk === false);
-  expect(upsertResult.errors).to.have.length.above(0);
-  expect(upsertResult.errors[0].options.code).to.equal('RANGE');
+      const addColId = 'prj4';
+      const rowIdColId = COURSES[courseId].rowIdColId;
+      const data = DATA[courseId].raw;
+      const addData = data.map((_: any) => ({ [addColId]: 1000 }));
+      const loadResult = await dao.load(courseId, data);
+      assert(loadResult.isOk);
+      const colsResult = await dao.addColumns(courseId, addColId);
+      assert(colsResult.isOk);
+      const patches =
+        Object.fromEntries(data.map((row, i) => [ row[rowIdColId], addData[i] ]));
+      const patchResult = await dao.patch(courseId, patches);
+      assert(patchResult.isOk === false);
+      expect(patchResult.errors).to.have.length.above(0);
+      expect(patchResult.errors[0].options.code).to.equal('RANGE');
     });
-    
   });
-  
-
 });
 
 function randGrade() {

@@ -208,8 +208,9 @@ export class GradesDao {
       } else {
         return upsertRowsResults;
       }
+    } else {
+      return upsertRowsReadResults;
     }
-    //return okResult(undefined);
   }
 
   /** Add an empty column for colId to table.
@@ -247,14 +248,13 @@ export class GradesDao {
       if (addColumnsResults.isOk) {
         await this.#write(courseId, addColumnsResults.val.getRawTable())
         return okResult(addColumnsResults.val);
-        //return addColumnsReadResults;
-      } //else {
-      //   return addColumnsReadResults;
-      //  }
+      } else {
+        return addColumnsResults;
+      }
 
+    } else{
+      return addColumnsReadResults;
     }
-    
-    //return okResult(undefined);
   }
   
   /** Apply patches to table, returning the patched table.
@@ -281,14 +281,13 @@ export class GradesDao {
       if (patchResults.isOk) {
         await this.#write(courseId, patchResults.val.getRawTable());
         return okResult(patchResults.val);
+      } else {
+        return patchResults;
       }
+    } else {
+      return patchReadDataResults;
     }
-    
-    //return okResult(undefined);
   }
-
-  //TODO: add private methods  
-  
 }
 
 /** Return an error result if courseId is unknown */
