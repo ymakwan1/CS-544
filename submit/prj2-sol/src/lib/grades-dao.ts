@@ -121,7 +121,7 @@ export class GradesDao {
     an error. */
     const courseCheck = checkCourseId(courseId);
     if (!courseCheck.isOk) {
-      return errResult(`unknown course id ${courseId}`, 'BAD_ARG');
+      return errResult(`unknown courseId ${courseId}`, 'BAD_ARG');
     }
     /* This is reading the grades for a course from the database. */
     try {
@@ -148,7 +148,7 @@ export class GradesDao {
         an error. */
     const courseCheck = checkCourseId(courseId);
     if (!courseCheck.isOk) {
-      return errResult(`unknown course id ${courseId}`, 'BAD_ARG');
+      return errResult(`unknown courseId ${courseId}`, 'BAD_ARG');
     }
 /* This is reading the grades for a course from the database. */
     const getGradesRead = this.#read(courseId);
@@ -232,7 +232,7 @@ export class GradesDao {
     /* This is checking if the courseId is valid or not. If the courseId is not valid, it will return an error. */
     const courseCheck = checkCourseId(courseId);
     if(!courseCheck.isOk){
-      return errResult(`unknown course id ${courseId}`, 'BAD_ARG');
+      return errResult(`unknown courseId '${courseId}'`, 'BAD_ARG');
     }
 
     /* This is reading the grades for a course from the database. */
@@ -247,7 +247,11 @@ export class GradesDao {
       if (addColumnsResults.isOk) {
         await this.#write(courseId, addColumnsResults.val.getRawTable())
         return okResult(addColumnsResults.val);
-      }
+        //return addColumnsReadResults;
+      } //else {
+      //   return addColumnsReadResults;
+      //  }
+
     }
     
     //return okResult(undefined);
