@@ -33,13 +33,30 @@ function setupRoutes(app: Express.Application) {
   app.use(Express.json());
 
   //TODO: add routes
-
+  app.get(`${base}/:courseId`, doGetGrades(app));
   //must be last
   app.use(do404(app));
   app.use(doErrors(app));
 }
 // TODO: add handlers
-
+function doGetGrades(app: Express.Application){
+  return ( async function(req: Express.Request, res: Express.Response){
+      const courseId = req.params.courseId;
+      const fullTable = req.query.full;
+      const getGradesResult = (await app.locals.model.getGrades(courseId));
+      if (!getGradesResult.isOk) {
+        throw getGradesResult;
+      }
+      res.location(courseId);
+      if (fullTable === "true") {
+        const getGradesResponse = selfResult<G.FullTable>(req, getGradesResult.val.getFullTable() );
+        res.json(getGradesResponse);
+      } else {
+        const getGradesResponse = selfResult<G.RawTable>(req, getGradesResult.val.getRawTable() );
+        res.json(getGradesResponse);
+      }
+  })
+}
 // A typical handler can be produced by running a function like
 // the following:
 function doSomeHandler(app: Express.Application) {
