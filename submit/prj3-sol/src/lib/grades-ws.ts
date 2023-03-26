@@ -33,13 +33,14 @@ function setupRoutes(app: Express.Application) {
   app.use(Express.json());
 
   //TODO: add routes
-  app.get(`${base}/:courseId`, doGetGrades(app));
+  app.get(`${base}/:courseId`, doGetCourseGrades(app));
+  app.get(`${base}/:courseId`, )
   //must be last
   app.use(do404(app));
   app.use(doErrors(app));
 }
 // TODO: add handlers
-function doGetGrades(app: Express.Application){
+function doGetCourseGrades(app: Express.Application){
   return ( async function(req: Express.Request, res: Express.Response){
       const courseId = req.params.courseId;
       const fullTable = req.query.full;
