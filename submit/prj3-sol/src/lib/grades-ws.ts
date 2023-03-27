@@ -34,7 +34,7 @@ function setupRoutes(app: Express.Application) {
 
   //TODO: add routes
   app.get(`${base}/:courseId`, doGetCourseGrades(app));
-  app.get(`${base}/:courseId`, )
+  app.get(`${base}/:courseId/:rowId`, doGetCourseGradeRow(app));
   //must be last
   app.use(do404(app));
   app.use(doErrors(app));
@@ -42,6 +42,7 @@ function setupRoutes(app: Express.Application) {
 // TODO: add handlers
 function doGetCourseGrades(app: Express.Application){
   return ( async function(req: Express.Request, res: Express.Response){
+    try{
       const courseId = req.params.courseId;
       const fullTable = req.query.full;
       const getGradesResult = (await app.locals.model.getGrades(courseId));
@@ -56,7 +57,18 @@ function doGetCourseGrades(app: Express.Application){
         const getGradesResponse = selfResult<G.RawTable>(req, getGradesResult.val.getRawTable() );
         res.json(getGradesResponse);
       }
-  })
+    } catch(err){
+      const mapped = mapResultErrors(err);
+      res.status(mapped.status).json(mapped);
+    }
+  });
+}
+
+function doGetCourseGradeRow(app : Express.Application){
+  return ( async function(req: Express.Request, res: Express.Response) {
+    const courseId = req.params.courseId;
+    const rowId = req.params.rowId;
+  });
 }
 // A typical handler can be produced by running a function like
 // the following:
