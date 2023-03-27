@@ -80,6 +80,8 @@ function doGetCourseGradeRow(app : Express.Application){
       const rowId = req.params.rowId;
       const fullTable = req.query.full;
 
+      const getCourseRowResult = await app.locals.model.getGrades(courseId);
+
     } catch (err) {
       const mapped = mapResultErrors(err);
       res.status(mapped.status).json(mapped);
@@ -87,12 +89,30 @@ function doGetCourseGradeRow(app : Express.Application){
   });
 }
 
+/**
+ * It takes a courseId and a list of patches, and returns the updated course grades
+ * @param app - Express.Application - the Express application object
+ * @returns A function that takes in a request and response object and returns a promise.
+ */
 function doPatchCourseGrades(app : Express.Application){
   return ( async function(req: Express.Request, res: Express.Response) {
     try {
       const courseId = req.params.courseId;
       const fullTable = req.query.full;
+      const patches = req.body;
 
+      const patchCourseGradesResult = await app.locals.model.patch(courseId, patches);
+      if (!patchCourseGradesResult.isOk) {
+        throw patchCourseGradesResult;
+      }
+      res.location(courseId);
+      if (fullTable === "true") {
+        const patchGradesResponse = selfResult<G.FullTable>(req, patchCourseGradesResult.val.getFullTable() );
+        res.json(patchGradesResponse);
+      } else {
+        const patchGradesResponse = selfResult<G.RawTable>(req, patchCourseGradesResult.val.getRawTable() );
+        res.json(patchGradesResponse);
+      }
     } catch (err) {
       const mapped = mapResultErrors(err);
       res.status(mapped.status).json(mapped);
