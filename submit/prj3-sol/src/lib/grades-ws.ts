@@ -32,14 +32,23 @@ function setupRoutes(app: Express.Application) {
   app.use(cors({exposedHeaders: 'Location'}));
   app.use(Express.json());
 
-  //TODO: add routes
+  /* Setting up the routes for the server. */
   app.get(`${base}/:courseId`, doGetCourseGrades(app));
   app.get(`${base}/:courseId/:rowId`, doGetCourseGradeRow(app));
+  app.post(`${base}/:courseId`, doLoadCourseGrades(app));
+  app.patch(`${base}/:courseId`, doPatchCourseGrades(app));
+
   //must be last
   app.use(do404(app));
   app.use(doErrors(app));
 }
 // TODO: add handlers
+/**
+ * It takes a courseId from the URL, and a fullTable query parameter, and returns a JSON representation
+ * of the grades for that course
+ * @param app - Express.Application - the Express application object
+ * @returns A function that takes in a request and response object and returns a promise.
+ */
 function doGetCourseGrades(app: Express.Application){
   return ( async function(req: Express.Request, res: Express.Response){
     try{
@@ -66,10 +75,66 @@ function doGetCourseGrades(app: Express.Application){
 
 function doGetCourseGradeRow(app : Express.Application){
   return ( async function(req: Express.Request, res: Express.Response) {
-    const courseId = req.params.courseId;
-    const rowId = req.params.rowId;
+    try {
+      const courseId = req.params.courseId;
+      const rowId = req.params.rowId;
+      const fullTable = req.query.full;
+
+    } catch (err) {
+      const mapped = mapResultErrors(err);
+      res.status(mapped.status).json(mapped);
+    }
   });
 }
+
+function doPatchCourseGrades(app : Express.Application){
+  return ( async function(req: Express.Request, res: Express.Response) {
+    try {
+      const courseId = req.params.courseId;
+      const fullTable = req.query.full;
+
+    } catch (err) {
+      const mapped = mapResultErrors(err);
+      res.status(mapped.status).json(mapped);
+    }
+  });
+}
+
+/**
+ * It takes a courseId and a courseLoadData object, and returns a selfResult object containing the
+ * course's raw table
+ * @param app - Express.Application
+ * @returns A function that takes in a request and response object and returns a promise.
+ */
+function doLoadCourseGrades(app : Express.Application){
+  return ( async function(req: Express.Request, res: Express.Response) {
+    try {
+      const courseId = req.params.courseId;
+      const courseLoadData = req.body;
+      const fullTable = req.query.full;
+
+      const postLoadResults = await app.locals.model.load(courseId, courseLoadData);
+      if (!postLoadResults.isOk) {
+        throw postLoadResults;
+      }
+      res.location(courseId);
+
+      if (fullTable === "true") {
+        const postLoadResponse = selfResult<G.FullTable>(req, postLoadResults.val.getFullTable() );
+        res.json(postLoadResponse);
+      } else {
+        const postLoadResponse = selfResult<G.RawTable>(req, postLoadResults.val.getRawTable() );
+        res.json(postLoadResponse);
+      }
+    } catch (err) {
+      const mapped = mapResultErrors(err);
+      res.status(mapped.status).json(mapped);
+    }
+  });
+}
+
+
+
 // A typical handler can be produced by running a function like
 // the following:
 function doSomeHandler(app: Express.Application) {
