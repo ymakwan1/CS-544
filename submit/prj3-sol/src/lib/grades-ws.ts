@@ -73,6 +73,13 @@ function doGetCourseGrades(app: Express.Application){
   });
 }
 
+/**
+ * It takes a courseId and a rowId, and returns the row with that rowId from the course with that
+ * courseId
+ * @param app - Express.Application
+ * @returns A function that takes in an Express.Request and Express.Response and returns a
+ * Promise<void>
+ */
 function doGetCourseGradeRow(app : Express.Application){
   return ( async function(req: Express.Request, res: Express.Response) {
     try {
@@ -81,6 +88,18 @@ function doGetCourseGradeRow(app : Express.Application){
       const fullTable = req.query.full;
 
       const getCourseRowResult = await app.locals.model.getGrades(courseId);
+      if (!getCourseRowResult.isOk) {
+        throw getCourseRowResult;
+      }
+      res.location(courseId);
+
+      if (fullTable === "true") {
+        const getCourseRowResponse = selfResult<G.FullTable>(req, getCourseRowResult.val.getFullTableRow(rowId));
+        res.json(getCourseRowResponse.result);
+      } else {
+        const getCourseRowResponse = selfResult<G.RawTable>(req, getCourseRowResult.val.getRawTableRow(rowId));
+        res.json(getCourseRowResponse.result);
+      }
 
     } catch (err) {
       const mapped = mapResultErrors(err);
