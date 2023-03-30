@@ -60,10 +60,10 @@ function doGetCourseGrades(app: Express.Application){
       }
       res.location(courseId);
       if (fullTable === "true") {
-        const getGradesResponse = selfResult<G.FullTable>(req, getGradesResult.val.getFullTable() );
+        const getGradesResponse = selfResult<G.FullTable>(req, getGradesResult.val.getFullTable());
         res.json(getGradesResponse);
       } else {
-        const getGradesResponse = selfResult<G.RawTable>(req, getGradesResult.val.getRawTable() );
+        const getGradesResponse = selfResult<G.RawTable>(req, getGradesResult.val.getRawTable());
         res.json(getGradesResponse);
       }
     } catch(err){
@@ -94,13 +94,20 @@ function doGetCourseGradeRow(app : Express.Application){
       res.location(courseId);
 
       if (fullTable === "true") {
-        const getCourseRowResponse = selfResult<G.FullTable>(req, getCourseRowResult.val.getFullTableRow(rowId));
-        res.json(getCourseRowResponse.result);
+        const fullTableRowResult = getCourseRowResult.val.getFullTableRow(rowId);
+        if (!fullTableRowResult.isOk) {
+          throw fullTableRowResult;
+        }
+        const getCourseRowResponse = selfResult<G.FullTable>(req, fullTableRowResult.val);
+        res.json(getCourseRowResponse);
       } else {
-        const getCourseRowResponse = selfResult<G.RawTable>(req, getCourseRowResult.val.getRawTableRow(rowId));
-        res.json(getCourseRowResponse.result);
+        const rawTableRowResult = getCourseRowResult.val.getRawTableRow(rowId);
+        if (!rawTableRowResult.isOk) {
+          throw rawTableRowResult;
+        }
+        const getCourseRowResponse = selfResult<G.RawTable>(req, rawTableRowResult.val);
+        res.json(getCourseRowResponse);
       }
-
     } catch (err) {
       const mapped = mapResultErrors(err);
       res.status(mapped.status).json(mapped);
@@ -126,10 +133,10 @@ function doPatchCourseGrades(app : Express.Application){
       }
       res.location(courseId);
       if (fullTable === "true") {
-        const patchGradesResponse = selfResult<G.FullTable>(req, patchCourseGradesResult.val.getFullTable() );
+        const patchGradesResponse = selfResult<G.FullTable>(req, patchCourseGradesResult.val.getFullTable());
         res.json(patchGradesResponse);
       } else {
-        const patchGradesResponse = selfResult<G.RawTable>(req, patchCourseGradesResult.val.getRawTable() );
+        const patchGradesResponse = selfResult<G.RawTable>(req, patchCourseGradesResult.val.getRawTable());
         res.json(patchGradesResponse);
       }
     } catch (err) {
@@ -159,10 +166,10 @@ function doLoadCourseGrades(app : Express.Application){
       res.location(courseId);
 
       if (fullTable === "true") {
-        const postLoadResponse = selfResult<G.FullTable>(req, postLoadResults.val.getFullTable() );
+        const postLoadResponse = selfResult<G.FullTable>(req, postLoadResults.val.getFullTable());
         res.json(postLoadResponse);
       } else {
-        const postLoadResponse = selfResult<G.RawTable>(req, postLoadResults.val.getRawTable() );
+        const postLoadResponse = selfResult<G.RawTable>(req, postLoadResults.val.getRawTable());
         res.json(postLoadResponse);
       }
     } catch (err) {

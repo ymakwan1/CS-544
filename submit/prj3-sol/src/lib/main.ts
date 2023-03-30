@@ -55,6 +55,7 @@ async function main(args: string[]) {
 async function loadGrades(dao: GradesDao, gradesJsonPaths: string[])
   : Promise<Result<void>>
 {
+  if (gradesJsonPaths.length === 0) return okResult(undefined);
   const clearResult = await dao.clear();
   if (!clearResult.isOk) return clearResult;
   for (const path of gradesJsonPaths) {
