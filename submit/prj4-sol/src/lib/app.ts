@@ -2,6 +2,7 @@ import { CourseInfo as C, GradeTable as G, GradesImpl, COURSES }
   from 'cs544-prj1-sol';
 
 import { Err, Result, okResult, errResult, ErrResult, OkResult } from 'cs544-js-utils';
+import { Grades } from 'cs544-prj1-sol/dist/lib/grade-table';
 
 /** factory function to create an App and take care of any
  *  asynchronous initialization.
@@ -128,17 +129,19 @@ class App {
 
   changeHandler = async(ev:Event) =>{
     ev.preventDefault()
-    const r = await this.getCourseGrades('cs220');
-    // if (r.) {
+    // const r = await this.getCourseGrades('cs220');
+    // // if (r.) {
       
-    // }
-    console.log(r);
+    // // }
+    // console.log(r);
     const formData = getFormData(this.gradesForm);
-    const cs544 = await this.getCourseGrades(formData.courseId, formData.rowId);
-    
-    console.log(cs544);
-    console.log(formData);
-    console.log(ev);
+    const afterChangeData : any = await this.getCourseGrades(formData.courseId, formData.rowId, formData.full);
+    if (afterChangeData.isOk) {
+      this.generateTable(afterChangeData.val.result)
+    }
+    console.log(afterChangeData);
+    // console.log(formData);
+    // console.log(ev);
   };
   //TODO: add methods/data as necessary.
 
@@ -166,8 +169,11 @@ class App {
     const tr = makeElement("tr");
     for (const header of headers) {
       console.log(row[header]);
-      const val=row[header].toString();
-      const td = makeElement("td", {}, val);
+      let val = row[header];
+      if (typeof val === 'number') {
+        val = val.toFixed(1);
+      }
+      const td = makeElement("td", {}, val.toString());
       tr.append(td);
     }
     this.table.append(tr);
