@@ -68,7 +68,7 @@ class WebServices {
         return (data);
       }
     } catch (error) {
-      return errResult;
+      return errResult(error);
     }
   }
 }
