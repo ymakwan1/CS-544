@@ -20,21 +20,28 @@ class WebServices {
     this.baseUrl = baseUrl;
   }
 
-  async getCourseGrades(courseId:string){
+  async getCourseGrades(courseId:string, rowId?:string, full?:string){
     try {
-      const response = await fetch(`${this.baseUrl}/grades/${courseId}`)
+      let url = `${this.baseUrl}/grades/${courseId}`;
+      if (rowId && rowId !== '' ) {
+      url += `/${rowId}`;
+      }
+      if (full) {
+      url += '?full=true';
+      }
+      const response = await fetch(url)
       if(response.ok){
         const data  =  await response.json();
-        console.log(data);
-        if (!data.ok) {
+        if (!data.isOk) {
           return errResult(data);
         } else {
           const d = GradesImpl.makeGradesWithData(courseId, data.result);
-          console.log(d);
           return okResult(data);
         }
+      } else {
+        const data = await response.json();
+        return (data);
       }
-
     } catch (error) {
       return errResult;
     }
@@ -49,14 +56,16 @@ class App {
   private gradesForm : HTMLFormElement; 
   private webService : WebServices
   private table : HTMLElement
+  private errors : HTMLElement
+  /**
+   * This is a constructor function that initializes various properties and event listeners, and makes
+   * an API call to generate a table of grades for a specific course.
+   * @param {string} wsUrl - The `wsUrl` parameter is a string that represents the URL of a web
+   * service. It is used to create a new instance of the `WebServices` class.
+   */
   constructor(wsUrl: string) {
-    //TODO
-    //cache form HTMLElements as instance vars, set up handlers, web services
-
-    //this.webService = new WebServices(wsUrl);
-
+    this.webService = new WebServices(wsUrl);
     this.wsUrl = wsUrl;
-
     this.courseIdSelect = document.querySelector('#course-id') as HTMLSelectElement;
     this.courseIdSelect.append(...coursesOptions())
 
@@ -64,122 +73,110 @@ class App {
     this.showStatsCheckbox = document.querySelector('#show-stats') as HTMLInputElement;
     this.gradesForm = document.querySelector('#grades-form') as HTMLFormElement;
     this.table = document.querySelector('#grades') as HTMLElement;
+    this.errors = document.querySelector('#errors') as HTMLElement;
 
     this.courseIdSelect.addEventListener('change', this.handlerChange)
     this.showStatsCheckbox.addEventListener('change', this.handlerChange);
     this.studentIdSelect.addEventListener('change', this.handlerChange);
-    //this.gradesForm.addEventListener('submit', this.changeHandler);
     this.gradesForm.addEventListener('change', (ev:Event) => this.changeHandler(ev));
     
-    const r = this.getCourseGrades('cs220').then((response:OkResult<any>|ErrResult)=>{
+    this.webService.getCourseGrades('cs220').then((response:OkResult<any>|ErrResult)=>{
       if (response.isOk) {
-        console.log(response);
         this.generateTable(response.val.result);
       }
-      
     });
-    // console.log("From const" + );
-    // changeHandler(ev:Event) {
-    //   ev.preventDefault()
-    //   this.initialize();
-    //   console.log(getFormData(this.gradesForm.form))
-    //   console.log(ev);
-    // };
-    
-
-    //this.gradesForm.addEventListener('change', changeHandler);
-
   }
+
   removeAllChildNodes(parent:HTMLElement) {
     while (parent.firstChild) {
         parent.removeChild(parent.firstChild);
-  }
-}
-
-  async getCourseGrades(courseId:string, rowId?:string, full?:string){
-    try {
-      let url = `${this.wsUrl}/grades/${courseId}`;
-      if (rowId && rowId !== '' ) {
-      url += `/${rowId}`;
-      }
-      if (full) {
-      url += '?full=true';
-      }
-      const response = await fetch(url)
-      if(response.ok){
-        const data  =  await response.json();
-        //console.log(data);
-        if (!data.isOk) {
-          return errResult(data);
-        } else {
-          const d = GradesImpl.makeGradesWithData(courseId, data.result);
-          //console.log(d);
-          return okResult(data);
-        }
-      } else {
-        const data = await response.json();
-        console.log(data);
-      }
-    } catch (error) {
-      return errResult;
     }
   }
+
+  // async getCourseGrades(courseId:string, rowId?:string, full?:string){
+  //   try {
+  //     let url = `${this.wsUrl}/grades/${courseId}`;
+  //     if (rowId && rowId !== '' ) {
+  //     url += `/${rowId}`;
+  //     }
+  //     if (full) {
+  //     url += '?full=true';
+  //     }
+  //     const response = await fetch(url)
+  //     if(response.ok){
+  //       const data  =  await response.json();
+  //       if (!data.isOk) {
+  //         return errResult(data);
+  //       } else {
+  //         const d = GradesImpl.makeGradesWithData(courseId, data.result);
+  //         return okResult(data);
+  //       }
+  //     } else {
+  //       const data = await response.json();
+  //       return (data);
+  //     }
+  //   } catch (error) {
+  //     return errResult;
+  //   }
+  // }
 
 
 
   changeHandler = async(ev:Event) =>{
     ev.preventDefault()
-    // const r = await this.getCourseGrades('cs220');
-    // // if (r.) {
-      
-    // // }
-    // console.log(r);
+    this.removeAllChildNodes(this.table);
+    this.removeAllChildNodes(this.errors);
     const formData = getFormData(this.gradesForm);
-    const afterChangeData : any = await this.getCourseGrades(formData.courseId, formData.rowId, formData.full);
+    const afterChangeData : any = await this.webService.getCourseGrades(formData.courseId, formData.rowId, formData.full);
     if (afterChangeData.isOk) {
       this.generateTable(afterChangeData.val.result)
+    } else {
+      this.generateErrors(afterChangeData.errors[0].message)
     }
-    console.log(afterChangeData);
-    // console.log(formData);
-    // console.log(ev);
   };
   //TODO: add methods/data as necessary.
 
   handlerChange(ev : Event){
-    console.log(ev)
+    // this.removeAllChildNodes(this.table);
+    // this.removeAllChildNodes(this.errors);
+  }
+
+  generateErrors(data:any){
+    // this.removeAllChildNodes(this.table);
+    // this.removeAllChildNodes(this.errors);
+   //for (const error of data) {
+      const li = makeElement("li", {}, data); // create a new li element with the error text
+      this.errors.append(li); // append the li element to the ul element
+    //}
   }
 
   generateTable(data:any){
-    console.log(data)
-    this.removeAllChildNodes(this.table)
+    // this.removeAllChildNodes(this.errors);
+    // this.removeAllChildNodes(this.table)
     const headerRow = makeElement("tr");
     const headers = Object.keys(data[0])
-// Create table header columns
+
     for (const header of headers) {
       const th = makeElement("th", {}, header);
       headerRow.append(th);
     }
-
-// Append header row to the table
     this.table.append(headerRow);
-
-// Create table data rows
-  for (const row of data) {
-    console.log(row);
-    const tr = makeElement("tr");
-    for (const header of headers) {
-      console.log(row[header]);
-      let val = row[header];
-      if (typeof val === 'number') {
-        val = val.toFixed(1);
+    for (const row of data) {
+      const tr = makeElement("tr");
+      for (const header of headers) {
+        let val = row[header];
+        if (typeof val === 'number') {
+          if (Number.isInteger(val)) {
+            val = val;
+          } else {
+            val = Math.round(val * 10.0) / 10.0;
+          }
+        }
+        const td = makeElement("td", {}, val.toString());
+        tr.append(td);
       }
-      const td = makeElement("td", {}, val.toString());
-      tr.append(td);
-    }
-    this.table.append(tr);
+      this.table.append(tr);
   }
-
-// Append the table to the DOM
   document.body.appendChild(this.table);
   }
 }
