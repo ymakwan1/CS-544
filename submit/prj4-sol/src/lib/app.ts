@@ -149,32 +149,32 @@ class App {
   generateTable(data:any){
     console.log(data)
     this.removeAllChildNodes(this.table)
-  const headerRow = makeElement("tr");
-  const headers = Object.keys(data[0])
+    const headerRow = makeElement("tr");
+    const headers = Object.keys(data[0])
 // Create table header columns
-  for (const header of headers) {
-    const th = makeElement("th", {}, header);
-    headerRow.appendChild(th);
-  }
+    for (const header of headers) {
+      const th = makeElement("th", {}, header);
+      headerRow.append(th);
+    }
 
 // Append header row to the table
-  this.table.appendChild(headerRow);
+    this.table.append(headerRow);
 
 // Create table data rows
-for (const row of data) {
-  console.log(row);
-  const tr = makeElement("tr");
-  for (const header of headers) {
-    console.log(row[header]);
-    const val=row[header].toString();
-    const td = makeElement("td", {}, val);
-    tr.append(td);
+  for (const row of data) {
+    console.log(row);
+    const tr = makeElement("tr");
+    for (const header of headers) {
+      console.log(row[header]);
+      const val=row[header].toString();
+      const td = makeElement("td", {}, val);
+      tr.append(td);
+    }
+    this.table.append(tr);
   }
-  this.table.append(tr);
-}
 
 // Append the table to the DOM
-document.body.appendChild(this.table);
+  document.body.appendChild(this.table);
   }
 }
 
