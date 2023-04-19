@@ -13,13 +13,38 @@ export default async function makeApp(url: string) {
 
 }
 
+/* The `WebServices` class is a class that defines a private property `baseUrl` and an
+asynchronous function `getCourseGrades` for retrieving course grades data from a specified URL. */
 class WebServices {
 
+  /* This code defines a private property `baseUrl` of type string in the `WebServices` class and
+  initializes it with the value passed as an argument to the constructor. The constructor takes a
+  string parameter `baseUrl` and assigns it to the `baseUrl` property of the class instance using
+  the `this` keyword. This property is used to store the base URL of the web service that the
+  `WebServices` class will interact with. */
   private baseUrl:string
   constructor(baseUrl : string) {
     this.baseUrl = baseUrl;
   }
 
+  /**
+   * This is an asynchronous function that retrieves course grades data from a specified URL and
+   * returns either an error or a result object.
+   * @param {string} courseId - A string representing the ID of the course for which the grades are
+   * being retrieved.
+   * @param {string} [rowId] - The rowId parameter is an optional string parameter that represents the
+   * ID of a specific row in the grades table for a particular course. If provided, the function will
+   * retrieve the grades for that specific row only. If not provided, the function will retrieve the
+   * grades for all rows in the grades table for the
+   * @param {string} [full] - The "full" parameter is an optional parameter that can be passed to the
+   * function. If it is set to "true", it will include all the details of the grades for the specified
+   * course and row. If it is not set or set to any other value, it will only include basic information
+   * about
+   * @returns a Promise that resolves to either an error result or a success result containing the
+   * grades data for a given course. The error result is returned if there is an issue with the request
+   * or if the data returned from the server is not in the expected format. The success result contains
+   * the grades data for the course, which is parsed from the JSON response returned by the server.
+   */
   async getCourseGrades(courseId:string, rowId?:string, full?:string){
     try {
       let url = `${this.baseUrl}/grades/${courseId}`;
@@ -48,6 +73,9 @@ class WebServices {
   }
 }
 
+/* The `App` class is a class that initializes properties and event listeners, makes API
+calls to retrieve data from a web service, and generates a table of grades for a specific course
+based on user input. */
 class App {
   private wsUrl : string;
   private courseIdSelect: HTMLSelectElement;
@@ -64,25 +92,43 @@ class App {
    * service. It is used to create a new instance of the `WebServices` class.
    */
   constructor(wsUrl: string) {
+    /* These lines of code are initializing properties of the `App` class. */
     this.webService = new WebServices(wsUrl);
     this.wsUrl = wsUrl;
     this.courseIdSelect = document.querySelector('#course-id') as HTMLSelectElement;
     this.courseIdSelect.append(...coursesOptions())
 
+    /* These lines of code are selecting specific HTML elements from the DOM using their IDs and
+    assigning them to properties of the `App` class. */
     this.studentIdSelect = document.querySelector('#student-id') as HTMLInputElement;
     this.showStatsCheckbox = document.querySelector('#show-stats') as HTMLInputElement;
     this.gradesForm = document.querySelector('#grades-form') as HTMLFormElement;
     this.table = document.querySelector('#grades') as HTMLElement;
     this.errors = document.querySelector('#errors') as HTMLElement;
 
+    /* These lines of code are adding event listeners to various HTML elements in the DOM. When the
+    user interacts with these elements (e.g. changes the selected option in the `courseIdSelect`
+    dropdown), the corresponding event (e.g. `change`) is triggered, and the event listener function
+    (`handlerChange` or `changeHandler`) is executed. These event listener functions are responsible
+    for updating the UI based on the user's input and making API calls to retrieve data from the web
+    service. */
     this.courseIdSelect.addEventListener('change', this.handlerChange)
     this.showStatsCheckbox.addEventListener('change', this.handlerChange);
     this.studentIdSelect.addEventListener('change', this.handlerChange);
     this.gradesForm.addEventListener('change', (ev:Event) => this.changeHandler(ev));
     
+    /* This code is making an API call to the `getCourseGrades` method of the `WebServices` class with
+    the argument `'cs220'`. It then waits for the response using the `then` method, which takes a
+    callback function that is executed when the response is received. If the response is successful
+    (`isOk` property is true), it calls the `generateTable` method of the `App` class with the
+    `result` property of the response. If the response is not successful, it calls the
+    `generateErrors` method of the `App` class with the error message from the first error in the
+    `errors` property of the response. */
     this.webService.getCourseGrades('cs220').then((response:OkResult<any>|ErrResult)=>{
       if (response.isOk) {
         this.generateTable(response.val.result);
+      } else {
+        this.generateErrors(response.errors[0].message)
       }
     });
   }
