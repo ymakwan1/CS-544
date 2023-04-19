@@ -139,66 +139,61 @@ class App {
     }
   }
 
-  // async getCourseGrades(courseId:string, rowId?:string, full?:string){
-  //   try {
-  //     let url = `${this.wsUrl}/grades/${courseId}`;
-  //     if (rowId && rowId !== '' ) {
-  //     url += `/${rowId}`;
-  //     }
-  //     if (full) {
-  //     url += '?full=true';
-  //     }
-  //     const response = await fetch(url)
-  //     if(response.ok){
-  //       const data  =  await response.json();
-  //       if (!data.isOk) {
-  //         return errResult(data);
-  //       } else {
-  //         const d = GradesImpl.makeGradesWithData(courseId, data.result);
-  //         return okResult(data);
-  //       }
-  //     } else {
-  //       const data = await response.json();
-  //       return (data);
-  //     }
-  //   } catch (error) {
-  //     return errResult;
-  //   }
-  // }
 
-
-
+  /* `changeHandler` is an asynchronous function that is called when the user interacts with the
+  `gradesForm` element in the DOM. It first prevents the default behavior of the event (i.e.
+  submitting the form and reloading the page). It then removes all child nodes from the `table` and
+  `errors` elements in the DOM. It then retrieves the form data using the `getFormData` function and
+  makes an API call to the `getCourseGrades` method of the `WebServices` class with the form data as
+  arguments. It waits for the response using the `await` keyword, and if the response is successful
+  (`isOk` property is true), it calls the `generateTable` method of the `App` class with the
+  `result` property of the response. If the response is not successful, it calls the
+  `generateErrors` method of the `App` class with the error message from the first error in the
+  `errors` property of the response. */
   changeHandler = async(ev:Event) =>{
     ev.preventDefault()
     this.removeAllChildNodes(this.table);
     this.removeAllChildNodes(this.errors);
     const formData = getFormData(this.gradesForm);
     const afterChangeData : any = await this.webService.getCourseGrades(formData.courseId, formData.rowId, formData.full);
+    
     if (afterChangeData.isOk) {
       this.generateTable(afterChangeData.val.result)
     } else {
       this.generateErrors(afterChangeData.errors[0].message)
     }
   };
+
   //TODO: add methods/data as necessary.
 
+  /**
+   * The function "handlerChange" takes an event as a parameter in TypeScript.
+   * @param {Event} ev - The parameter "ev" is of type "Event", which represents an event that has
+   * occurred in the browser, such as a mouse click or a keyboard press. This parameter is used in the
+   * function "handlerChange" to handle the event and perform some action based on the event that
+   * occurred.
+   */
   handlerChange(ev : Event){
-    // this.removeAllChildNodes(this.table);
-    // this.removeAllChildNodes(this.errors);
   }
 
-  generateErrors(data:any){
-    // this.removeAllChildNodes(this.table);
-    // this.removeAllChildNodes(this.errors);
-   //for (const error of data) {
-      const li = makeElement("li", {}, data); // create a new li element with the error text
-      this.errors.append(li); // append the li element to the ul element
-    //}
+  
+  /**
+   * The function generates error messages and appends them to a list element.
+   * @param {string} data - A string representing the error message that needs to be displayed.
+   */
+  generateErrors(data:string){
+    const li = makeElement("li", {}, data); // create a new li element with the error text
+    this.errors.append(li); // append the li element to the ul element
   }
 
-  generateTable(data:any){
-    // this.removeAllChildNodes(this.errors);
-    // this.removeAllChildNodes(this.table)
+  
+  /**
+   * This function generates a table with headers and data from an array of objects.
+   * @param {G.GradeRow[]} data - An array of objects representing rows of data for a grade table. Each
+   * object should have the same keys, representing the columns of the table. The values can be of any
+   * type, but if they are numbers, they will be rounded to one decimal place.
+   */
+  generateTable(data:G.GradeRow[]){
     const headerRow = makeElement("tr");
     const headers = Object.keys(data[0])
 
@@ -222,8 +217,8 @@ class App {
         tr.append(td);
       }
       this.table.append(tr);
-  }
-  document.body.appendChild(this.table);
+    } 
+    document.body.append(this.table);
   }
 }
 
@@ -261,8 +256,3 @@ function makeElement(tagName: string, attrs: {[attr: string]: string} = {},
   if (text.length > 0) element.append(text);
   return element;
 }
-
-
-
-
-
