@@ -17,7 +17,27 @@ type GradesTableProps = {
 
 export default function GradesTable(props: GradesTableProps) {
   const { ws, courseId, courseInfo, grades, setResult } = props;
-  return <>TODO</>;
+  const dataRows = grades.getFullTable();
+  //const dataRows : any = [];
+  console.log(dataRows);
+  if (!dataRows.length) {
+    return (
+      <table>
+        <tbody></tbody>
+      </table>
+    );
+  }
+  console.log(props.courseId);
+  const hdrs = Object.keys(dataRows[0]);
+  
+  return (
+    <table>
+      <tbody>
+        <Header hdrs={hdrs} />
+      </tbody>
+    </table>
+  );
+  //return <>TODO</>;
 }
 
 /* The following sub-components are based on the visual layout of
@@ -50,7 +70,14 @@ type HeaderProps = {
 };
 
 function Header(props: HeaderProps) {
-  return <></>;
+  console.log(props.hdrs);
+  return (
+    <tr>
+      {props.hdrs.map((hdr) => (
+        <th key={hdr}>{hdr}</th>
+      ))}
+    </tr>
+  );
 }
 
 type DataTableProps = {
