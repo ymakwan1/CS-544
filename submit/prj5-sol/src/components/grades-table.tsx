@@ -19,7 +19,7 @@ export default function GradesTable(props: GradesTableProps) {
   const { ws, courseId, courseInfo, grades, setResult } = props;
   const dataRows = grades.getFullTable();
   //const dataRows : any = [];
-  console.log(dataRows);
+ // console.log(dataRows);
   if (!dataRows.length) {
     return (
       <table>
@@ -27,17 +27,29 @@ export default function GradesTable(props: GradesTableProps) {
       </table>
     );
   }
-  console.log(props.courseId);
+  //console.log(props.courseId);
   const hdrs = Object.keys(dataRows[0]);
-  
+  const changeGrade = async (rowId: string, colId: string, val: string) => {
+    const numVal = parseFloat(val);
+    if (!isNaN(numVal) || val === '') {
+      const patches:G.Patches = { [rowId]: { [colId]: val } };
+    const result = await ws.updateCourseGrades(courseId, patches);
+    //console.log(result);
+    if(result.isOk){
+      setResult(result);
+    } else {
+      return errResult(result.errors);
+    }
+    }
+  };
   return (
     <table>
       <tbody>
         <Header hdrs={hdrs} />
+        <DataTable data={dataRows} courseInfo={courseInfo} changeGrade={changeGrade} />
       </tbody>
     </table>
   );
-  //return <>TODO</>;
 }
 
 /* The following sub-components are based on the visual layout of
@@ -70,7 +82,7 @@ type HeaderProps = {
 };
 
 function Header(props: HeaderProps) {
-  console.log(props.hdrs);
+  //console.log(props.hdrs);
   return (
     <tr>
       {props.hdrs.map((hdr) => (
@@ -88,7 +100,13 @@ type DataTableProps = {
 
 function DataTable(props: DataTableProps) {
   const { data, courseInfo, changeGrade } = props;
-  return <></>;
+  return(
+    <>
+      {data.map((row, idx) => (
+        <DataRow key={idx} dataRow={row} courseInfo={courseInfo} changeGrade={changeGrade} />
+      ))}
+    </>
+  );
 }
 
 type DataRowProps = {
@@ -99,8 +117,22 @@ type DataRowProps = {
 
 function DataRow(props: DataRowProps) {
   const {dataRow, courseInfo, changeGrade} = props;
-  return <></>;
+  return(
+    <tr>
+      {Object.entries(dataRow).map(([colId, val]) => {
+        if (courseInfo.id === 'cs544' && typeof val === 'number') {
+          val = val.toFixed(1);
+        }
+        return (
+          <td key={colId}>
+            {typeof val === 'object' ? JSON.stringify(val) : val}
+          </td>
+        );
+      })}
+    </tr>
+  );
 }
+
 
 type GradeInputProps = {
   rowId: string,
@@ -109,7 +141,22 @@ type GradeInputProps = {
   changeGrade: (rowId: string, colId: string, val: string) => void,
 };
 
+// function GradeInput(props: GradeInputProps) {
+//   const { rowId, colId, val, changeGrade } = props;
+//   return <></>;
+// }
 function GradeInput(props: GradeInputProps) {
   const { rowId, colId, val, changeGrade } = props;
-  return <></>;
+  const [value, setValue] = React.useState(val);
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setValue(event.target.value);
+  };
+  const handleBlur = async () => {
+    if (value !== val) {
+      await changeGrade(rowId, colId, value);
+    }
+  };
+  return (
+    <input type="text" value={value} onChange={handleChange} onBlur={handleBlur} />
+  );
 }
