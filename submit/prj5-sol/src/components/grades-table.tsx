@@ -38,6 +38,7 @@ export default function GradesTable(props: GradesTableProps) {
     if(result.isOk){
       setResult(result);
     } else {
+      console.log(result.errors);
       return errResult(result.errors);
     }
     }
@@ -120,14 +121,23 @@ function DataRow(props: DataRowProps) {
   return(
     <tr>
       {Object.entries(dataRow).map(([colId, val]) => {
+        //console.log(courseInfo.cols[colId]?.kind === 'score');
         if (courseInfo.id === 'cs544' && typeof val === 'number') {
           val = val.toFixed(1);
         }
+        if (props.courseInfo.cols[colId]?.kind === 'score' && dataRow[courseInfo.rowIdColId] !== '') {
+          return (
+            <td key={colId}>
+            {/* <GradeInput rowId={dataRow[courseInfo.rowIdColId]} colId={colId} val={val} changeGrade={changeGrade} /> */}
+            <GradeInput rowId={dataRow[courseInfo.rowIdColId].toString()} colId={colId} val={String(val)} changeGrade={changeGrade} />
+            </td>
+            );
+        } else {
         return (
           <td key={colId}>
             {typeof val === 'object' ? JSON.stringify(val) : val}
           </td>
-        );
+        );}
       })}
     </tr>
   );
@@ -145,18 +155,70 @@ type GradeInputProps = {
 //   const { rowId, colId, val, changeGrade } = props;
 //   return <></>;
 // }
+// function GradeInput(props: GradeInputProps) {
+//   const { rowId, colId, val, changeGrade } = props;
+//   const [value, setValue] = React.useState(val);
+//   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+//     setValue(event.target.value);
+//   };
+//   const handleBlur = async () => {
+//     if (value !== val) {
+//       await changeGrade(rowId, colId, value);
+//     }
+//   };
+//   return (
+//     <input type="text" value={value} onChange={handleChange} onBlur={handleBlur} />
+//   );
+// }
 function GradeInput(props: GradeInputProps) {
   const { rowId, colId, val, changeGrade } = props;
   const [value, setValue] = React.useState(val);
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setValue(event.target.value);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setValue(e.target.value);
+    //changeGrade(rowId, colId, value);
   };
-  const handleBlur = async () => {
+
+  const handleBlur = () => {
     if (value !== val) {
-      await changeGrade(rowId, colId, value);
+      changeGrade(rowId, colId, value);
     }
   };
+
   return (
-    <input type="text" value={value} onChange={handleChange} onBlur={handleBlur} />
+    <input
+      type="text"
+      size={3}
+      value={value}
+      onChange={handleChange}
+      onBlur={handleBlur}
+    />
   );
 }
+
+// function GradeInput(props: GradeInputProps) {
+//   const { rowId, colId, val, changeGrade } = props;
+//   const [value, setValue] = React.useState(val);
+  
+//   const handleInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+//     // ignore any input typed into the input widget
+//     event.preventDefault();
+//   }
+
+//   const handleBlur = async () => {
+//     if (val !== value) {
+//       await changeGrade(rowId, colId, value);
+//     }
+//   };
+
+//   return (
+//     <input
+//       type="text"
+//       value={value}
+//       size={3}
+//       onChange={(event) => setValue(event.target.value)}
+//       onBlur={handleBlur}
+//       onInput={handleInput}
+//     />
+//   );
+// }
