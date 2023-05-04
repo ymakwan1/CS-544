@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { GradesWs } from '../lib/grades-ws.js';
 
@@ -36,7 +36,13 @@ type `GradesTableProps` and returns a JSX element representing a table of grades
 course. */
 export default function GradesTable(props: GradesTableProps) {
   const { ws, courseId, courseInfo, grades, setResult } = props;
-  const dataRows = grades.getFullTable();
+  const [newgrades, setGrades] = React.useState(grades);
+ 
+  React.useEffect(() => {
+    setGrades(props.grades);
+  }, [props.grades]); 
+  const dataRows = newgrades.getFullTable();
+  console.log(dataRows);
   if (dataRows.length === 0) {
     return (
       <table>
@@ -59,14 +65,14 @@ export default function GradesTable(props: GradesTableProps) {
       setResult(errResult(`value ${val} for ${colId} contains a letter`));
     }
   };
-  return (
+  return <>
     <table>
       <tbody>
-        <Header hdrs={hdrs}/>
+        <Header hdrs={hdrs} />
         <DataTable data={dataRows} courseInfo={courseInfo} changeGrade={changeGrade} />
       </tbody>
     </table>
-  );
+    </>;
 }
 
 /* The following sub-components are based on the visual layout of
@@ -156,7 +162,7 @@ function DataTable(props: DataTableProps) {
   return (
     <>
     {data.map((row, idx) => (
-      <DataRow key={idx} dataRow={row} courseInfo={courseInfo} changeGrade={changeGrade}/>
+      <DataRow  dataRow={row} courseInfo={courseInfo} changeGrade={changeGrade}/>
     ))}
     </>
   );
@@ -194,6 +200,7 @@ is used to determine whether or not a cell should be editable based on the ` */
 function DataRow(props: DataRowProps) {
   const {dataRow, courseInfo, changeGrade} = props;
   const roundVal = (val : number) => val.toFixed(1);
+  const rowId : string = dataRow.emailId as string !== ''? dataRow.emailId as string : dataRow.$stat as string;
   const cells = Object.entries(dataRow).map(([colId, val]) =>{
     const isEditable = dataRow[courseInfo.rowIdColId] !== '' && courseInfo.cols[colId]?.kind === 'score';
     return (
@@ -213,7 +220,7 @@ function DataRow(props: DataRowProps) {
       </td>
     );
   });
-  return <tr>{cells}</tr>;
+  return <tr key={rowId} >{cells}</tr>;
 }
 
 /**
