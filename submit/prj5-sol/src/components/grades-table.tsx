@@ -162,7 +162,7 @@ function DataTable(props: DataTableProps) {
   return (
     <>
     {data.map((row, idx) => (
-      <DataRow  dataRow={row} courseInfo={courseInfo} changeGrade={changeGrade}/>
+      <DataRow  key={idx} dataRow={row} courseInfo={courseInfo} changeGrade={changeGrade}/>
     ))}
     </>
   );
