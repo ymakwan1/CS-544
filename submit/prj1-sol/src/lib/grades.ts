@@ -420,9 +420,47 @@ class GradesImpl implements C.CourseObj, G.Grades {
    *    RANGE: Patch data is out-of-range.
    */
   patch(patches: G.Patches): Result<G.Grades> {
-    return errResult('TODO', 'UNIMPLEMENTED') as Result<G.Grades>;
+    const columnIds = this.#colIds;
+    const rawRowsMap = this.#rawRowsMap;
+
+    const validatePatch = this.#patchValidation(patches);
+    if (!validatePatch.isOk) {
+      return validatePatch as Result<G.Grades>
+    }
+
+    const newRawRowMapPairs = Object.entries(this.#rawRowsMap).map(([rowId, rowData]) => [rowId, patches[rowId] ? {...rowData, ...patches[rowId]} : rowData]);
+    const newRawRowsMap = Object.fromEntries(newRawRowMapPairs);
+    const grades = new GradesImpl(this.course, this.#colIds, newRawRowsMap);
+    return okResult(grades);
   }
 
+  #patchValidation(patches : G.Patches) : Result<undefined>{
+    const [course, columnIds] = [this.course, this.#colIds];
+    let err = new ErrResult();
+    Object.entries(patches).forEach(([rowId, row]) => {
+      if (this.#rawRowsMap[rowId] === undefined) {
+        err = err.addError(`unknown rowId ${rowId}`, 'BAD_ARG');
+      }
+      
+      Object.entries(row).forEach(([colId, data]) => {
+        if (!this.#colIds.has(colId)) {
+          err = err.addError(`colId ${colId} not in table`, 'BAD_ARG');
+        }
+
+        if (typeof data === 'number') {
+          const val = Number(data);
+          const col = this.course.cols[colId];
+          const kind = col?.kind
+
+          if (kind === 'score' && (val < col.min || val > col.max)) {
+            err = err.addError(`value ${val} for ${colId} out of range [${col.min}, ${col.max}]`, 'RANGE');
+          }
+        }
+      });
+    });
+
+    return (err.errors.length > 0) ? err : okResult(undefined);
+  }
   /** Return full table containing all computed values */
   getFullTable(): G.FullTable {
     return null; //TODO
