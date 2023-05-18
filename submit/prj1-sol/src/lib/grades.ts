@@ -463,7 +463,60 @@ class GradesImpl implements C.CourseObj, G.Grades {
   }
   /** Return full table containing all computed values */
   getFullTable(): G.FullTable {
-    return null; //TODO
+    if (this.#fullTable === null) {
+      const rawRowsMap = this.#rawRowsMap;
+      const calculateColumns = this.#calculateColumns();
+      const calculateRows = this.#calculateRows(calculateColumns);
+      const fullTable = [...calculateColumns, ...calculateRows];
+      this.#fullTable = fullTable;
+    }
+    return this.#fullTable;
+  }
+
+  #calculateColumns() : G.GradeRow[]{
+    const rows : G.GradeRow[] = []
+    const course = this.course;
+    const calcCols = Object.values(course.cols).filter(c => c.kind === 'calc');
+    for (const rawRow of Object.values(this.#rawRowsMap)) {
+      const row : G.GradeRow = { [G.STAT_HDR] : '', ...rawRow};
+      for (const calcCol of calcCols) {
+        if (calcCol.kind === 'calc') {
+          const fnResult = calcCol.fn(course, row);
+          const value = fnResult.isOk ? fnResult.val : (fnResult as ErrResult);
+          row[calcCol.colId] = value;
+        }
+      }
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  #calculateRows(calcRows : G.GradeRow[]) : G.GradeRow[] {
+    const course = this.course;
+    const colProps = course.cols;
+    const calcColIds = Object.keys(calcRows[0]);
+    const rows : G.GradeRow[] = [] 
+    for (const calcRowProp of Object.values(course.calcRows)) {
+      const fn = calcRowProp.fn;
+      const row : G.GradeRow = {};
+      for (const colId of calcColIds) {
+        if (colId === G.STAT_HDR) {
+          row[colId] = calcRowProp.rowId;
+        } else {
+          const colProp = colProps[colId];
+          if (colProp.kind === 'id' || colProp.kind === 'info') {
+            row[colId] = ''
+          } else {
+            const col = getColumn(calcRows, colId);
+            const result = fn(course, col);
+            const value = result.isOk ? result.val : (result as ErrResult);
+            row[colId] = value;
+          }
+        }
+      }
+      rows.push(row);
+    }
+    return rows;
   }
 
   /** Return a raw table containing the raw data.  Note that all
@@ -548,4 +601,8 @@ class GradesImpl implements C.CourseObj, G.Grades {
   //TODO: add auxiliary private methods as needed
 }
 
+function getColumn(rows : G.GradeRow[], colId : string) : G.Grade[] {
+  const col : G.Grade[] = rows.map(row => row[colId]);
+  return col;
+}
 //TODO: add auxiliary functions as needed
