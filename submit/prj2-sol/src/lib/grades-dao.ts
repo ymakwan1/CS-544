@@ -19,8 +19,6 @@ export class GradesDao {
   #grades: mongo.Collection;
 
   private constructor(params: { [key: string]: any }) {
-    //TODO
-    //debugger
     this.#client = params.client;
     this.#grades = params.grades;
   }
@@ -30,7 +28,6 @@ export class GradesDao {
   static async make(dbUrl: string) : Promise<Result<GradesDao>> {
     const params: { [key: string]: any } = {};
     try {
-      //TODO
       params.client = await(new mongo.MongoClient(dbUrl)).connect();
       const db = params.client.db();
 
@@ -48,10 +45,9 @@ export class GradesDao {
 
   /** Close this DAO. */
   async close() : Promise<Result<void>> {
-    //TODO
-    //return null;
     try {
       await this.#client.close();
+      return okResult(undefined);
     } catch (e) {
       return errResult(e.message, 'DB');
     }
@@ -71,7 +67,6 @@ export class GradesDao {
     const result = await this.#write(courseId, rawTable);
 
     return result;
-    //return null;
   }
   
   /**
