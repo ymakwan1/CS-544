@@ -1,4 +1,4 @@
-# i544
+# CS-544
 ### CS 544 - Progamming for the Web - Prof. Zerksis Umrigar <br>
 
 #### Project - 1 : Gradebook Application Development in TypeScript.
