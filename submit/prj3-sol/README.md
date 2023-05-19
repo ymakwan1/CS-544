@@ -1,7 +1,3 @@
-Name:		Yash Sanjay Makwana
-B-Number:	B00974752
-Email:		ymakwan1@binghamton.edu
-
 # Grades API Server
 
 This is an Express.js server implementation of a Grades API. It provides endpoints for managing grades for different courses.
