@@ -2,7 +2,7 @@
 
 The provided code is a TypeScript module that implements a grading system for a course. It exports a function `makeGrades` and defines several classes and types used in the grading system.
 
-## makeGrades
+## `makeGrades`
 
 The `makeGrades` function is the default export of the module. It takes a `CourseInfo` object as a parameter and returns a `Grades` object. It serves as a factory function for creating instances of the `GradesImpl` class.
 
